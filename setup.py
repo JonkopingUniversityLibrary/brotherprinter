@@ -11,4 +11,5 @@ setup(name='brotherprinter',
       install_requires=[
             'pypiwin32'
       ],
+      include_package_data=True,
       zip_safe=False)
