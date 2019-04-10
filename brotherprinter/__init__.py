@@ -7,11 +7,14 @@ class PrintException(Exception):
 
 
 class BrotherPrinter:
-    def __init__(self, *, template_name):
+    def __init__(self, template_name, *, directory=os.path.abspath(os.path.dirname(__file__))):
         self.doc = win32com.DispatchEx('bpac.Document')
         self.printers = self.doc.Printer.GetInstalledPrinters
         self.enabled_printer = None
-        self.template_name = template_name
+        self.template = {
+            'name': template_name,
+            'directory': directory
+        }
         self.constants = {
             'bpoHighResolution': 0x02000000
         }
@@ -29,16 +32,13 @@ class BrotherPrinter:
             id = self.doc.Printer.GetMediaId
             name = self.doc.Printer.GetMediaName
             return "Label - {id} : {name}".format(id=id, name=name) if name else "No Media"
-        
+
     def get_available_printer(self):
         printers = self.doc.Printer.GetInstalledPrinters
-        if printers:
-            for printer in printers:
-                if self.doc.Printer.IsPrinterSupported(printer) \
-                        and self.doc.Printer.IsPrinterOnline(printer) \
-                        and self.doc.Printer.GetMediaName:
-                    return printer
-            return None
+        for printer in printers:
+            if self.doc.Printer.IsPrinterSupported(printer) \
+                    and self.doc.Printer.IsPrinterOnline(printer):
+                return printer
         else:
             return None
 
@@ -58,12 +58,11 @@ class BrotherPrinter:
         if not printer:
             raise PrintException('No printers available')
 
-        directory = os.path.abspath(os.path.dirname(__file__))
-        template = os.path.join(directory, self.template_name)
+        template = os.path.join(self.template['directory'], self.template['name'])
 
         has_opened = self.doc.Open(template)
         if not has_opened:
-            raise PrintException('No template with the name "' + self.template_name + '" available')
+            raise PrintException('No template with the name "' + self.template['name'] + '" available')
 
         if not self.doc.StartPrint("", self.constants['bpoHighResolution']):
             raise PrintException('Failed to start print')
@@ -79,8 +78,3 @@ class BrotherPrinter:
             raise PrintException('Failed to close print')
 
         return True
-
-
-label_printer = BrotherPrinter(template_name='Dewey_12mm_16px.lbx')
-print(label_printer.print_callnumber('073 Pythonscript'))
-
