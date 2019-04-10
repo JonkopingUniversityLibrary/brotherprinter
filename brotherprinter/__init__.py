@@ -7,7 +7,7 @@ class PrintException(Exception):
 
 
 class BrotherPrinter:
-    def __init__(self, *, template_name='default.lpx', directory=os.path.abspath(os.path.dirname(__file__))):
+    def __init__(self, *, template_name='default.lbx', directory=os.path.abspath(os.path.dirname(__file__))):
         self.doc = win32com.DispatchEx('bpac.Document')
         self.printers = self.doc.Printer.GetInstalledPrinters
         self.enabled_printer = None
@@ -64,7 +64,7 @@ class BrotherPrinter:
 
         has_opened = self.doc.Open(self.template['path'])
         if not has_opened:
-            raise PrintException('No template with the name "' + self.template['name'] + '" available')
+            raise PrintException('No template with the name "' + self.template['name'] + '" available in directory "' + self.template['directory'] + '"')
 
         if not self.doc.StartPrint("", self.constants['bpoHighResolution']):
             raise PrintException('Failed to start print')
