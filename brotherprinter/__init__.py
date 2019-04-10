@@ -14,7 +14,7 @@ class BrotherPrinter:
         self.template = {
             'name': template_name,
             'directory': directory,
-            'path': os.path.join(self.template['directory'], self.template['name'])
+            'path': os.path.join(directory, template_name)
         }
         self.constants = {
             'bpoHighResolution': 0x02000000
