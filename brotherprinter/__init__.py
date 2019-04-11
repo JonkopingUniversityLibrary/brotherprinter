@@ -1,82 +1,67 @@
-import win32com.client as win32com
-import os
-
-
 class PrintException(Exception):
     pass
 
 
 class BrotherPrinter:
-    def __init__(self, *, template_name='default.lbx', directory=os.path.abspath(os.path.dirname(__file__))):
-        self.doc = win32com.DispatchEx('bpac.Document')
-        self.printers = self.doc.Printer.GetInstalledPrinters
-        self.enabled_printer = None
-        self.template = {
-            'name': template_name,
-            'directory': directory,
-            'path': os.path.join(directory, template_name)
-        }
+    def __init__(self):
         self.constants = {
             'bpoHighResolution': 0x02000000
         }
 
-    def open_template(self):
-        return self.doc.Open(self.template['path'])
+    def get_printer_info(self, bpac):
+        for printer in bpac.Printer.GetInstalledPrinters:
+            support = True if bpac.Printer.IsPrinterSupported(printer) else False
+            status = "Online" if bpac.Printer.IsPrinterOnline(printer) else "Offline"
+            return {
+                'printer_info': {
+                    'name': printer,
+                    'is_supported': support,
+                    'status': status
+                }
+            }
 
-    def get_printer_info(self):
-        for printer in self.printers:
-            support = "Yes" if self.doc.Printer.IsPrinterSupported(printer) else "No"
-            status = "Online" if self.doc.Printer.IsPrinterOnline(printer) else "Offline"
-            return "{name} - Support: {support}, Status: {status}".format(name=printer, support=support, status=status)
+    def get_label_info(self, bpac):
+        for printer in bpac.Printer.GetInstalledPrinters:
+            bpac.SetPrinter(printer, False)
 
-    def get_label_info(self):
-        for printer in self.printers:
-            self.doc.SetPrinter(printer, False)
+            id = bpac.Printer.GetMediaId
+            name = bpac.Printer.GetMediaName
+            return {
+                'label_info': {
+                    'id': id,
+                    'name': name if name else "No Media"
+                }
+            }
 
-            id = self.doc.Printer.GetMediaId
-            name = self.doc.Printer.GetMediaName
-            return "Label - {id} : {name}".format(id=id, name=name) if name else "No Media"
-
-    def get_available_printer(self):
-        printers = self.doc.Printer.GetInstalledPrinters
+    def get_available_printer(self, bpac):
+        printers = bpac.Printer.GetInstalledPrinters
         for printer in printers:
-            if self.doc.Printer.IsPrinterSupported(printer) \
-                    and self.doc.Printer.IsPrinterOnline(printer):
+            if bpac.Printer.IsPrinterSupported(printer) \
+                    and bpac.Printer.IsPrinterOnline(printer):
                 return printer
         else:
             return None
 
-    def set_printer(self, printer):
-        if printer:
-            self.doc.SetPrinter(printer, False)
-            self.enabled_printer = printer
-            return True
-        return False
-
-    def print_callnumber(self, call_number):
-        # Set default printer
-        if not self.enabled_printer:
-            self.set_printer(self.get_available_printer())
-
-        printer = self.enabled_printer
+    def print_callnumber(self, bpac, *, template, call_number):
+        printer = self.get_available_printer(bpac)
         if not printer:
             raise PrintException('No printers available')
 
-        has_opened = self.doc.Open(self.template['path'])
+        has_opened = bpac.Open(template)
         if not has_opened:
-            raise PrintException('No template with the name "' + self.template['name'] + '" available in directory "' + self.template['directory'] + '"')
+            raise PrintException('No template available at the path "' + template + '"')
 
-        if not self.doc.StartPrint("", self.constants['bpoHighResolution']):
+        if not bpac.StartPrint("", self.constants['bpoHighResolution']):
             raise PrintException('Failed to start print')
 
-        self.doc.GetObject("CallNumber").Text = call_number
-        PrintOut = self.doc.PrintOut(1, self.constants['bpoHighResolution'])
+        bpac.GetObject("CallNumber").Text = call_number
+        PrintOut = bpac.PrintOut(1, self.constants['bpoHighResolution'])
 
         if not PrintOut:
-            raise PrintException('Failed to Print Out (ErrorCode ' + self.doc.ErrorCode + ')')
-        if not self.doc.EndPrint:
+            raise PrintException('Failed to Print Out (ErrorCode ' + bpac.ErrorCode + ')')
+        if not bpac.EndPrint:
             raise PrintException('Failed to end print')
-        if not self.doc.Close:
+        if not bpac.Close:
             raise PrintException('Failed to close print')
 
         return True
