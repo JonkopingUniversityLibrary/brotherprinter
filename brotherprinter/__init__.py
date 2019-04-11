@@ -29,7 +29,7 @@ class BrotherPrinter:
             return {
                 'label_info': {
                     'id': id,
-                    'name': name if name else "No Media"
+                    'name': name if name else "Ingen media"
                 }
             }
 
@@ -45,23 +45,23 @@ class BrotherPrinter:
     def print_callnumber(self, bpac, *, template, call_number):
         printer = self.get_available_printer(bpac)
         if not printer:
-            raise PrintException('No printers available')
+            raise PrintException('Ingen skrivare är tillgänglig')
 
         has_opened = bpac.Open(template)
         if not has_opened:
-            raise PrintException('No template available at the path "' + template + '"')
+            raise PrintException('Mallfilen på sökvägen "' + template + '" är inte tillgänglig')
 
         if not bpac.StartPrint("", self.constants['bpoHighResolution']):
-            raise PrintException('Failed to start print')
+            raise PrintException('Misslyckades med att starta utskrift')
 
         bpac.GetObject("CallNumber").Text = call_number
         PrintOut = bpac.PrintOut(1, self.constants['bpoHighResolution'])
 
         if not PrintOut:
-            raise PrintException('Failed to Print Out (ErrorCode ' + bpac.ErrorCode + ')')
+            raise PrintException('Misslyckades med att skriva ut (Felkod ' + bpac.ErrorCode + ')')
         if not bpac.EndPrint:
-            raise PrintException('Failed to end print')
+            raise PrintException('Misslyckades med att avsluta utskrift')
         if not bpac.Close:
-            raise PrintException('Failed to close print')
+            raise PrintException('Misslyckades med att stänga skrivaren')
 
         return True
