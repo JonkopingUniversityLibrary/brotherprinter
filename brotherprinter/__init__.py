@@ -7,34 +7,34 @@ class BrotherPrinter:
         self.constants = {
             'bpoHighResolution': 0x02000000
         }
+        self.default_printer = None
 
     def get_printer_info(self, bpac):
-        printer = self.get_available_printer(bpac)
+        printer = self.default_printer
         if printer:
             support = True if bpac.Printer.IsPrinterSupported(printer) else False
-            status = "Online" if bpac.Printer.IsPrinterOnline(printer) else "Offline"
+            online = True if bpac.Printer.IsPrinterOnline(printer) else False
             return {
                 'printer_info': {
                     'name': printer,
                     'is_supported': support,
-                    'status': status
+                    'online': online
                 }
             }
         else:
             return None
 
     def get_label_info(self, bpac):
-        for printer in bpac.Printer.GetInstalledPrinters:
-            bpac.SetPrinter(printer, False)
-
-            id = bpac.Printer.GetMediaId
-            name = bpac.Printer.GetMediaName
-            return {
-                'label_info': {
-                    'id': id,
-                    'name': name if name else "Ingen media"
-                }
+        printer = self.default_printer
+        bpac.SetPrinter(printer, False)
+        id = bpac.Printer.GetMediaId
+        name = bpac.Printer.GetMediaName
+        return {
+            'label_info': {
+                'id': id,
+                'name': name if name else "Ingen media"
             }
+        }
 
     def get_available_printer(self, bpac):
         printers = bpac.Printer.GetInstalledPrinters
@@ -45,11 +45,14 @@ class BrotherPrinter:
         else:
             return None
 
+    def set_default_printer(self, bpac):
+        self.default_printer = self.get_available_printer(bpac)
+
     def get_printers(self, bpac):
         return bpac.Printer.GetInstalledPrinters
 
-    def print_callnumber(self, bpac, *, template, call_number):
-        printer = self.get_available_printer(bpac)
+    def print_callnumber(self, bpac, *, template, call_number, printer=None):
+        printer = printer if printer else self.default_printer
         if not printer:
             raise PrintException('Ingen skrivare är tillgänglig')
 
