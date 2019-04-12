@@ -9,7 +9,8 @@ class BrotherPrinter:
         }
 
     def get_printer_info(self, bpac):
-        for printer in bpac.Printer.GetInstalledPrinters:
+        printer = self.get_available_printer(bpac)
+        if printer:
             support = True if bpac.Printer.IsPrinterSupported(printer) else False
             status = "Online" if bpac.Printer.IsPrinterOnline(printer) else "Offline"
             return {
@@ -19,6 +20,8 @@ class BrotherPrinter:
                     'status': status
                 }
             }
+        else:
+            return None
 
     def get_label_info(self, bpac):
         for printer in bpac.Printer.GetInstalledPrinters:
@@ -36,11 +39,14 @@ class BrotherPrinter:
     def get_available_printer(self, bpac):
         printers = bpac.Printer.GetInstalledPrinters
         for printer in printers:
-            if bpac.Printer.IsPrinterSupported(printer) \
-                    and bpac.Printer.IsPrinterOnline(printer):
+            if bpac.Printer.IsPrinterSupported(printer) and \
+                    bpac.Printer.IsPrinterOnline(printer):
                 return printer
         else:
             return None
+
+    def get_printers(self, bpac):
+        return bpac.Printer.GetInstalledPrinters
 
     def print_callnumber(self, bpac, *, template, call_number):
         printer = self.get_available_printer(bpac)
