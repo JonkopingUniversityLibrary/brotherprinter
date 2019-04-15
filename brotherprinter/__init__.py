@@ -36,7 +36,8 @@ class BrotherPrinter:
             }
         }
 
-    def get_available_printer(self, bpac):
+    @staticmethod
+    def get_available_printer(bpac):
         printers = bpac.Printer.GetInstalledPrinters
         for printer in printers:
             if bpac.Printer.IsPrinterSupported(printer) and \
@@ -48,7 +49,8 @@ class BrotherPrinter:
     def set_default_printer(self, bpac):
         self.default_printer = self.get_available_printer(bpac)
 
-    def get_printers(self, bpac):
+    @staticmethod
+    def get_printers(bpac):
         return bpac.Printer.GetInstalledPrinters
 
     def print_callnumber(self, bpac, *, template, call_number, printer=None):
