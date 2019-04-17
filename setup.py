@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='brotherprinter',
-      version='1.0',
+      version='1.1',
       description='Python module for printing to Brother Printers via b-Pac SDK',
       url='https://github.com/JonkopingUniversityLibrary/brotherprinter',
       author='Gustav Lindqvist',
