@@ -8,8 +8,5 @@ setup(name='brotherprinter',
       author_email='gustav.lindqvist@ju.se',
       license='Unlicense',
       packages=['brotherprinter'],
-      install_requires=[
-            'pypiwin32'
-      ],
       include_package_data=True,
       zip_safe=False)
